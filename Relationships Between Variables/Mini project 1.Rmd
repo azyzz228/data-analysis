@@ -1,0 +1,83 @@
+```{r}
+library(haven)
+library(tidyverse)
+library(rstatix)
+dat = read_dta('hw5.dta')
+attach(dat)
+```
+
+```{r}
+#2
+unique(p_durable)
+
+cor(hf_corrupt, p_durable, use = "complete.obs")
+
+#3-6
+hfcor_mod=lm(p_durable~hf_corrupt)
+summary(hfcor_mod)
+
+
+```
+```{r}
+detach(dat)
+demndem_data = subset(dat, chga_demo==1|chga_demo==0)
+attach(demndem_data)
+#getting model for democracy or non democracy
+lin_mod = lm(p_durable~hf_corrupt+chga_demo)
+summary(lin_mod)
+0.98856*50
+detach(demndem_data)
+```
+
+```{r}
+#7 
+x=seq(5,100,5)
+y=-9.80117+0.98856*x
+plot(x, y, type="b", pch=18, col="green", xlab="Freedom of Corruption", ylab = "Regime durability", main = "For both Democracy and dictatorship")
+```
+
+```{r}
+#only democracy
+dem = subset(dat, chga_demo==1)
+attach(dem)
+#getting model for democracy or non democracy
+lin_mod_dem = lm(p_durable~hf_corrupt+chga_demo)
+summary(lin_mod_dem)
+detach(dem)
+
+
+
+```
+```{r}
+y_dem=-19.5376+1.1671*x
+plot(x, y_dem, type="l", pch=12, col="blue", xlab="Freedom of Corruption", ylab = "Regime durability", main = "For Democracy")
+```
+```{r}
+#dictatorship
+nondem = subset(dat, chga_demo==0)
+attach(nondem)
+#getting model for democracy or non democracy
+lin_mod_nondem = lm(p_durable~hf_corrupt+chga_demo)
+summary(lin_mod_nondem)
+detach(nondem)
+
+y_nondem=0.4291*x
+plot(x, y_nondem, type="l", pch=12, col="red", xlab="Freedom of Corruption", ylab = "Regime durability", main = "For Dictatorship")
+
+
+
+```
+
+```{r}
+makePlot<-function(){
+  x=x; y1=y_dem; y2=y_nondem
+  plot(x, y1, type="b", pch=19, col="blue", xlab="Freedom of Corruption", ylab = "Regime durability", main = "Regime durability for two types of regimes")
+  lines(x, y2, pch=18, col="red", type="b", lty=2)
+}
+
+makePlot()
+legend(15, 85, legend=c("Democracy", "Dictatorship"),
+       col=c("Blue", "Red"), lty=1:2, cex=1.2,
+       box.lty=0)
+```
+
