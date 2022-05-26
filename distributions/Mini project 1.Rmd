@@ -1,0 +1,94 @@
+```{r}
+#loading data
+library(haven)
+library(tigerstats)
+dataset=read_dta('hw2.dta')
+```
+
+
+```{r}
+#Question 1
+#a
+z_160= qnorm(0.15)
+z_180=qnorm(0.92)
+
+our_std= 20 / (z_180-z_160)
+our_mean = 180-z_180*our_std
+
+pnormGC(c(170,185), region="between",
+        mean=our_mean,sd=our_std,graph=T)
+
+
+```
+
+
+
+
+```{r}
+#Question 3
+qnorm(0.01)
+#New standart deviation we need:
+std_3 = (110-128)/qnorm(0.01)
+std_3
+```
+
+```{r}
+pnormGC(-0.57, region="below", graph = T)
+```
+
+```{r}
+#Question 4a. Fertility rate for each region.
+regions=c(unique(dataset$region))
+indicators=c('IQR','STD','MEDIAN','Range(min)',"Range(max)")
+answer_table=data.frame(indicators)
+for(i in regions){
+  region_subset=subset(dataset, region==i)$fertility
+  q3=quantile(region_subset, probs=0.75, na.rm = T, names=F)
+  q1=quantile(region_subset, probs=0.25, na.rm = T, names=F)
+  our_iqr=q3-q1
+  its_range= 
+  region = c(our_iqr, sd(region_subset, na.rm = T), median(region_subset, na.rm = T), range(region_subset, na.rm = T))
+  #print(region)
+  answer_table[i]=region
+}
+answer_table
+
+```
+
+```{r}
+#4 (b)
+
+counter=1
+years = seq(from=1971,to=2005,by=1)
+number_of_countries=c()
+count(fert_g_5$year)
+for(i in years){
+  fert_g_5=subset(dataset, fertility>5 & year==i)
+  number_of_c=count(fert_g_5)
+  
+  number_of_countries[counter]=number_of_c
+  counter=counter+1
+}
+
+plot(years,number_of_countries, type="l", ylab="Number of countries", xlab="Year", main="Number of countres with fertility rate greater than 5 from 1971 to 2005")
+points(years,number_of_countries, pch=12)
+
+
+```
+
+```{r}
+#4c
+regions_1977=c(unique(dataset$region))
+
+region_1977=subset(dataset, year==1977 & region==regions_1977[2])
+iqr_reg=iqr(region_1977$fdi, na.rm = T)
+limit= 1.5*iqr_reg
+outlier_countries=region_1977[region_1977$fdi>limit|region_1977$fdi<limit,]['country']
+outlier_countries=na.omit(outlier_countries)
+colnames(outlier_countries)=regions_1977[2]
+View(outlier_countries)
+
+
+
+```
+
