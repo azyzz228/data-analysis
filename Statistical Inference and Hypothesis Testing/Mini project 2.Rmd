@@ -1,0 +1,194 @@
+```{r}
+library(haven)
+library(tidyverse)
+library(tigerstats)
+library(rstatix)
+dataset = read_dta('homework4.dta')
+detach(dataset)
+attach(dataset)
+```
+
+```{r}
+#1
+prop.table(table(black))
+
+#answer 0.1242537
+```
+```{r}
+#2 
+prop.table(table(black, econworse), 2)
+
+#answer 0.17028904
+```
+
+```{r}
+#3-4
+prop.table(table(econworse, black), 2)
+
+#answer for 3 0.04277834
+
+#there are appears to be very small difference of perception of economy between races. Almost equal percentage of both black and non-black people chose 1, 3, 4. The noticable difference is in 5 and 2. A lot more of black people thought that economy did very bad than other races did. Also, A lot less of black people thought economy did slightly better than non-black people did.
+
+```
+
+```{r}
+#5 Here we will be using distribution of proportions
+#Degree of freedom= (r-1)(c-1) = 4 * 1 = 4
+```
+
+```{r}
+#6
+# NULL HYPOTHESIS: there is no relationship between race and attitude toward the economy. I.E no matter what race is, equal percentage among all races would think of economy as 1,2,3,4,5.
+```
+
+```{r}
+#7 Test statistics I am using is Distribution of proportions are we are comparing nominal with ordinal.
+
+table(econworse, black)
+prop.table(table(black))[2]
+
+by_econ= table(econworse) 
+non_black_expected= by_econ*prop.table(table(black))[1] #expected values if nonblack
+black_expected= by_econ*prop.table(table(black))[2] #expected values if black
+
+
+chi_sq_for_nonblack= (table(econworse, black)[,1]-non_black_expected)^2 / (non_black_expected)
+
+chi_sq_for_black= (table(econworse, black)[,2]-black_expected)^2 / (black_expected)
+
+our_chi_sq= sum(chi_sq_for_black)+sum(chi_sq_for_nonblack)
+
+critical_chi_sq = qchisq(.95, df=4)
+
+our_chi_sq > critical_chi_sq #gives TRUE => we reject null hypothesis. it means that there is statistically significant difference between race and attitud toward economy
+
+chisq.test(our_table)
+
+#8
+#we reject null hypothesis, because chi squared (161) is much larger than ciritcal chi squared (9). it means that there is statistically significant difference between race and attitude toward economy. Depending on race, perception of economy is different. I conclude that black people's perception of economy as much worse (as we saw in #5) is significant enough to conclude that race plays role in attitude towards the economy
+```
+```{r}
+#9
+data_2000_2004= subset(dataset, year==2000|year==2004)
+
+#null hypothesis: there is no difference in turnout given gender. 
+data_2000_2004$male=ifelse(data_2000_2004$male==1, "Male","Female")
+turn_sex_2000_2004= table(data_2000_2004$turnout, data_2000_2004$male)
+
+chisq.test(turn_sex_2000_2004)
+# p-value = 0.331 => we cannot reject null hypothesis. Null hypothesis is true, i.e there was not statistically significant disparity depending on sex and turnout.
+```
+
+```{r}
+#10
+data_1980_1984= subset(dataset, year==1980|year==1984)
+
+#null hypothesis: there is no difference in turnout given gender. 
+data_1980_1984$male=ifelse(data_1980_1984$male==1, "Male","Female")
+turn_sex_1980_1984= table(data_1980_1984$turnout, data_1980_1984$male)
+
+chisq.test(turn_sex_1980_1984)
+#p -value = 0.37 => we cannot reject null hypothesis. Null hypothesis is true, i.e there was not statistically significant disparity in turnout depending on sex. We can conclude that voter turnout does not depend on sex.
+```
+
+
+```{r}
+#11 Comparing college and how conservative people are
+mean(constherm[college==0], na.rm=T) - mean(constherm[college==1], na.rm=T)
+
+# Answer is -4.435139. Without college, people are more conservative on average of 4.435139
+```
+
+```{r}
+#11 Assuming unequal variance
+#Difference in means is the same 4.435139. Variance does not impact mean.
+
+```
+
+```{r}
+#12 se, unequal
+with_college= subset(dataset, college==1)
+no_college= subset(dataset, college==0)
+
+sd_wc=sd(with_college$constherm, na.rm = T)
+n_wc=length(na.omit(with_college$turnout))
+
+
+sd_nc= sd(no_college$constherm, na.rm = T)
+n_nc=length(na.omit(no_college$turnout))
+
+se_unequal_var = sqrt( ((sd_wc^2)/n_wc) + ((sd_nc^2)/n_nc))
+se_unequal_var
+```
+
+```{r}
+#14 degrees of freedom- unequal
+nom_df_unequal= ( ((sd_wc^2)/n_wc) + ((sd_nc^2)/n_nc))^2
+
+denom_1u = (((sd_wc^2)/n_wc)^2)/(n_wc-1)
+denom_2u=(((sd_nc^2)/n_nc)^2)/(n_nc-1)
+
+df_unequal = nom_df_unequal/ (denom_1u+denom_2u)
+qt(0.95, df=df_unequal)
+```
+```{r}
+#15 t-score for unequal
+
+t_score_u = (mean(constherm[college==0], na.rm=T) - mean(constherm[college==1], na.rm=T))/se_unequal_var
+
+#T-score is significantly higher than critical t-score, => we reject null hypothesis. That's said, there is statistically significant difference in preferences conservatism based on having or not having college degree.
+
+```
+
+```{r}
+#16 recoding value
+dat= dataset
+detach(dataset)
+
+dat$constherm=ifelse(dat$constherm>60, "conservative", "liberal")
+
+c_conserv = subset(dat, college==1&constherm=="conservative")
+nc_conserv = subset(dat, college==0&constherm=="conservative")
+
+
+#Number of conservatives with college degrees
+years= seq(1980,2004,2)
+n_cc_by_years=c()
+count=1
+#how many conserv + college by year
+for(i in years){
+  x=length(c_conserv$college[c_conserv$year==i])
+  n_cc_by_years[count]=x
+  count=count+1
+}
+
+
+n_nc_by_years=c()
+count1=1
+#how many conserv + college by year
+for(i in years){
+  x=length(nc_conserv$college[nc_conserv$year==i])
+  n_nc_by_years[count1]=x
+  count1=count1+1
+}
+
+n_cc_by_years
+n_nc_by_years
+
+makePlot<-function(){
+  x<-years; y1=n_nc_by_years; y2=n_cc_by_years
+  plot(x, y1, type="b", pch=19, col="red", xlab="Years", ylab="Number of people", main="#conservatives w & w/o college degree")
+  lines(x, y2, pch=18, col="blue", type="b", lty=2)
+
+}
+
+makePlot()
+legend(1992, 700, legend=c("No college", "With college"),
+       col=c("red", "blue"), lty=1:2, cex=0.8,
+       box.lty=0)
+
+#From the plot we can identify that from 1980 to 1994 number of conservatives without college degree was higher. But the change occurs in 1994 and continues until 2004. In 1994 number of educated conservatives is higher than uneducated ones for the first time, from 1994 on the trend hold true. We can also observe that in 1998 conservatism was very low for both educated and uneducated people.
+
+
+```
+
