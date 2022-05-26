@@ -1,0 +1,62 @@
+```{r}
+#Homework 6
+library(haven)
+library(tidyverse)
+library(sjPlot)
+library(ggplot2)
+dataset=read_dta("hw6.dta")
+```
+
+```{r}
+dat1=subset(dataset, year==2004|year==2000)
+model_04=lm(dat1$miltherm~dat1$constherm)
+summary(model_04)
+```
+```{r}
+#2
+qt(0.975, 2440)
+```
+```{r}
+
+y_jitter = jitter(dat1$miltherm, factor = 10)
+x_jitter = jitter(dat1$constherm, factor = 10)
+
+plot(x_jitter, y_jitter, xlab = "Constherm", ylab = "Miltherm", main = "Constherm vs.  miltherm with regression line")
+abline(model_04)
+
+```
+
+```{r}
+dat2=subset(dataset, year==2002|year==2004)
+model2=lm(dat2$miltherm~dat2$constherm+dat2$male+dat2$age+dat2$white+dat2$trustgov+dat2$college)
+summary(model2)
+```
+```{r}
+var.test(dat2$miltherm,dat2$constherm)
+
+qf(0.95,5,2264)
+
+```
+```{r}
+income_f=factor(dat2$income, labels = c("1", "2", "3","4","5"))
+
+income_i=as.factor(income_f)
+model2_inc=lm(dat2$miltherm~dat2$constherm+dat2$male+income_i+dat2$age+dat2$white+dat2$trustgov+dat2$college)
+summary(model2_inc)
+```
+```{r}
+attach(dataset)
+income_f2=factor(income, labels = c("1", "2", "3","4","5"))
+income_i2=as.factor(income_f2)
+model3=lm(miltherm~constherm+male+age+college+white+trustgov+income_i2)
+summary(model3)
+```
+```{r}
+unique(year)
+years_f=factor(year, labels = c(1948, 1952, 1954, 1956, 1958, 1960, 1962, 1964, 1966, 1968, 1970, 1972, 1974, 1976, 1978, 1980,
+1982, 1984, 1986, 1988, 1990, 1992, 1994, 1996, 1998, 2000, 2002, 2004, 2008, 2012, 2016))
+year_i=as.factor(years_f)
+model4=lm(miltherm~constherm+male+age+college+white+trustgov+income_i2+year_i)
+summary(model4)
+```
+
